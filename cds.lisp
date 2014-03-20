@@ -64,16 +64,16 @@
   "Bad too, because we will have several functions all the same!"
   #'(lambda (cd) (equal (getf cd :artist) artist)))
 
-(defun where (&key title artist rating (ripped nil ripped-p))
-  "First version of where, cheeky"
-  #'(lambda (cd)
-      (and
-        (if title (equal (getf cd :title) title) t)
-        (if artist (equal (getf cd :artist) artist) t)
-        (if rating (equal (getf cd :rating) rating) t)
-        (if ripped-p (equal (getf cd :ripped) ripped) t))))
+;(defun where (&key title artist rating (ripped nil ripped-p))
+;  "First version of where, cheeky"
+;  #'(lambda (cd)
+;      (and
+;        (if title (equal (getf cd :title) title) t)
+;        (if artist (equal (getf cd :artist) artist) t)
+;        (if rating (equal (getf cd :rating) rating) t)
+;        (if ripped-p (equal (getf cd :ripped) ripped) t))))
 
-(defun update (selector-fn &key title artist rating (ripped nil ripped-p))
+(defun update-cd (selector-fn &key title artist rating (ripped nil ripped-p))
   "First version of update"
   (setf *db*
         (mapcar
@@ -85,5 +85,17 @@
                 (if ripped-p (setf (getf cd :ripped) ripped)))
               cd) *db*)))
 
-(defun delete (selector-fn)
+(defun delete-cd (selector-fn)
   (setf *db* (remove-if selector-fn *db*)))
+
+
+;; Macros
+(defun make-comparison-expr (field value)
+  `(equal (getf cd ,field) ,value))
+
+(defun make-comparisons-list (fields)
+  (loop while fields
+        collect (make-comparison-expr (pop fields) (pop fields))))
+
+(defmacro where (&rest clauses)
+  `#'(lambda (cd) (and ,@(make-comparisons-list clauses))))
